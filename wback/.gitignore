@@ -1,8 +1,11 @@
-# Django y Python
-*.pyc
-__pycache__
-db.sqlite3
-.env
-venv/
+# Entorno virtual
 env/
+venv/
+
+# Archivos de Python innecesarios
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 .DS_Store
