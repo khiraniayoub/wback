@@ -39,12 +39,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework.authtoken',
-    'wback',
-    'users',
-    
+    'apps.users',
+    'apps.message',
+    'apps.notifications',
+    'apps.utils',
 ]
 
-AUTH_USER_MODEL='users.CustomUser'
+# Use the app label ('users') for AUTH_USER_MODEL
+AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

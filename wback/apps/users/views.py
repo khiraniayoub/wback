@@ -36,49 +36,51 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
 
+
 class ProfileView(APIView):
     permission_classes=[IsAuthenticated]
 
     def get(self, request):
         serializer=ProfileSerializer(request.user)
         return Response(serializer.data)
+
     def put(self,request):
         serializer=ProfileSerializer(request.user, data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-    
+
     def patch(self, request):
         serializer = ProfileSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
         serializer = ChangePasswordSerializer(
             data=request.data,
             context={'request': request}
         )
-        
+
         if serializer.is_valid():
             # Cambiar la contraseña
             user = request.user
             user.set_password(serializer.validated_data['new_password'])
             user.save()
-            
+
             # Actualizar el token
             Token.objects.filter(user=user).delete()
             new_token = Token.objects.create(user=user)
-            
+
             return Response({
                 "message": "Contraseña actualizada exitosamente.",
                 "token": new_token.key
             }, status=status.HTTP_200_OK)
-        
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
