@@ -1,8 +1,0 @@
-# Django y Python
-*.pyc
-__pycache__
-db.sqlite3
-.env
-venv/
-env/
-.DS_Store
