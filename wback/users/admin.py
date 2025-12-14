@@ -6,15 +6,23 @@ from .models import CustomUser
 @admin.register(CustomUser)
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
-    list_display = ['email', 'username', 'first_name', 'last_name', 'is_staff', 'is_active']
-    list_filter = ['is_staff', 'is_active', 'date_joined']
-    search_fields = ['email', 'username', 'first_name', 'last_name']
-    ordering = ['-date_joined']
+    list_display = ['email', 'first_name', 'last_name', 'is_staff', 'is_active', 'created_at']
+    list_filter = ['is_staff', 'is_active', 'created_at']
+    search_fields = ['email', 'first_name', 'last_name']
+    ordering = ['-created_at']
     
-    fieldsets = UserAdmin.fieldsets + (
-        ('Additional Info', {'fields': ('bio', 'phone_number', 'date_of_birth', 'profile_picture')}),
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal Info', {'fields': ('first_name', 'last_name', 'phone', 'profile_picture')}),
+        ('Permissions', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'created_at', 'updated_at')}),
     )
     
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Additional Info', {'fields': ('email', 'bio', 'phone_number', 'date_of_birth', 'profile_picture')}),
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'is_staff', 'is_active')}
+        ),
     )
+    
+    readonly_fields = ('created_at', 'updated_at', 'last_login')
