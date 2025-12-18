@@ -1,6 +1,7 @@
 # Entorno virtual
 env/
 venv/
+.venv/
 
 # Archivos de Python innecesarios
 __pycache__/
@@ -18,3 +19,7 @@ db.sqlite3
 .env.local
 
 .DS_Store
+
+media/
+staticfiles/
+mediafiles/
