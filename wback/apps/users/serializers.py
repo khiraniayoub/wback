@@ -23,7 +23,7 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get("email")
         password = data.get("password")
-        user = authenticate(username=email, password=password)
+        user = authenticate(email=email, password=password)
 
         if not user:
             raise serializers.ValidationError("Invalid credentials.")
@@ -51,7 +51,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id', 'email', 'created_at', 'updated_at', 'full_name')
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
+class ChangePasswordSerializer(serializers.Serializer):
     old_password=serializers.CharField(required=True,write_only=True)
     new_password=serializers.CharField(required=True,write_only=True)
     new_password_confirm=serializers.CharField(required=True,write_only=True)
@@ -60,9 +60,7 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         if data['new_password']!=data['new_password_confirm']:
             raise serializers.ValidationError({"new_password_confirm":"The passwords do not match."})
         if len(data['new_password'])<8:
-            raise serializers.ValidationError({
-                "new_password_confirm":"The password must be at least 8 characters long.C."
-            })
+            raise serializers.ValidationError({"new_password_confirm":"The password must be at least 8 characters long."})
         return data
     
     def validate_old_password(self,value):
