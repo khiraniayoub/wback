@@ -26,7 +26,7 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=email, password=password)
 
         if not user:
-            raise serializers.ValidationError("Credenciales inválidas.")
+            raise serializers.ValidationError("Invalid credentials.")
 
         data["user"] = user
         return data
@@ -58,15 +58,15 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
     def validate(self,data):
         if data['new_password']!=data['new_password_confirm']:
-            raise serializers.ValidationError({"new_password_confirm":"las  contraseña no coinciden"})
+            raise serializers.ValidationError({"new_password_confirm":"The passwords do not match."})
         if len(data['new_password'])<8:
             raise serializers.ValidationError({
-                "new_password_confirm":"La contraseña debe tener al menos 8 caracteres."
+                "new_password_confirm":"The password must be at least 8 characters long.C."
             })
         return data
     
     def validate_old_password(self,value):
         user=self.context['request'].user
         if  not user.check_password(value):
-            raise serializers.ValidationError("La contraseña actual es incorrecta.")
+            raise serializers.ValidationError("The current password is incorrect..")
         return value

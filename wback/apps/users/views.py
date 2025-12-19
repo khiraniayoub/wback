@@ -12,7 +12,7 @@ class RegistrationView(APIView):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Usuario registrado exitosamente."}, status=status.HTTP_201_CREATED)
+            return Response({"message": "User successfully registered."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -29,8 +29,8 @@ class LoginView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para gestionar usuarios.
-    Requiere autenticación para acceder.
+    ViewSet for managing users.
+    Requires authentication to access..
     """
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
@@ -79,7 +79,7 @@ class ChangePasswordView(APIView):
             new_token = Token.objects.create(user=user)
 
             return Response({
-                "message": "Contraseña actualizada exitosamente.",
+                "message": "Password successfully updated.",
                 "token": new_token.key
             }, status=status.HTTP_200_OK)
 
