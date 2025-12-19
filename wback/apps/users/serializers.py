@@ -51,14 +51,14 @@ class ProfileSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('id', 'email', 'created_at', 'updated_at', 'full_name')
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
+class ChangePasswordSerializer(serializers.Serializer):
     old_password=serializers.CharField(required=True,write_only=True)
     new_password=serializers.CharField(required=True,write_only=True)
     new_password_confirm=serializers.CharField(required=True,write_only=True)
 
     def validate(self,data):
         if data['new_password']!=data['new_password_confirm']:
-            raise serializers.ValidationError({"new_password_confirm":"las  contraseña no coinciden"})
+            raise serializers.ValidationError({"new_password_confirm": "Las contraseñas no coinciden."})
         if len(data['new_password'])<8:
             raise serializers.ValidationError({
                 "new_password_confirm":"La contraseña debe tener al menos 8 caracteres."

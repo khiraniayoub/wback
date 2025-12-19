@@ -5,9 +5,18 @@ from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer,ProfileSerializer,ChangePasswordSerializer
 from .models import CustomUser
+from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
 class RegistrationView(APIView):
+    @extend_schema(
+        summary="user registration",
+        description="Creates a new user account int the platform.",
+        description="Creates a new user account in the platform.",
+        request=RegistrationSerializer,
+        responses={201: RegistrationSerializer,400: None}
+    )
+    
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -17,6 +26,15 @@ class RegistrationView(APIView):
 
 
 class LoginView(APIView):
+
+    @extend_schema(
+        summary="User login",
+        description="Authenticates credentiales and returns the authorization Token.",
+        description="Authenticates credentials and returns the authorization Token.",
+        request=LoginSerializer,
+        responses={200: {"type": "object", "properties": {"token": {"type": "string"}}}}
+    )
+
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -25,7 +43,14 @@ class LoginView(APIView):
         token, created = Token.objects.get_or_create(user=user)
 
         return Response({"token": token.key}, status=status.HTTP_200_OK)
-
+@extend_schema_view(
+    list=extend_schema(summary="List all users", description="Retrieve a list of all registered users."),
+    retrieve=extend_schema(summary="Get user details", description="Retrieve detailed information about a specific user by ID."),
+    create=extend_schema(summary="Create user (Admin Only)", description="Manually create a user. Restricted to staff/admins."),
+    update=extend_schema(summary="Update user", description="Full update of a user's information."),
+    partial_update=extend_schema(summary="Patch user", description="Partial update of a user's information."),
+    destroy=extend_schema(summary="Delete user", description="Permanently remove a user from the database.")
+)
 
 class UserViewSet(viewsets.ModelViewSet):
     """
@@ -40,9 +65,22 @@ class UserViewSet(viewsets.ModelViewSet):
 class ProfileView(APIView):
     permission_classes=[IsAuthenticated]
 
+    @extend_schema(
+        summary="View my profile", 
+        description="Get the profile details of the currently authenticated user.",
+        responses={200: ProfileSerializer}
+    )
+
     def get(self, request):
         serializer=ProfileSerializer(request.user)
         return Response(serializer.data)
+
+    @extend_schema(
+        summary="Update my profile", 
+        description="Update information for the currently authenticated user.",
+        request=ProfileSerializer, 
+        responses={200: ProfileSerializer}
+    )
 
     def put(self,request):
         serializer=ProfileSerializer(request.user, data=request.data,partial=True)
@@ -50,17 +88,29 @@ class ProfileView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-
+    
+    @extend_schema(exclude=True) 
     def patch(self, request):
-        serializer = ProfileSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        return self.put(request)
+    
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="Change password",
+        description="Updates the user password and refreshes the authentication Token.",
+        request=ChangePasswordSerializer,
+        responses={
+            200: {
+                "type": "object", 
+                "properties": {
+                    "message": {"type": "string"}, 
+                    "token": {"type": "string"}
+                }
+            }
+        }
+    )
 
     def post(self, request):
         serializer = ChangePasswordSerializer(

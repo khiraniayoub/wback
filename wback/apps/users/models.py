@@ -53,5 +53,5 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         if self.first_name and self.last_name:
-            return f"{self.first_name}{self.last_name}"
+            return f"{self.first_name} {self.last_name}"
         return self.email
