@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer,ProfileSerializer,ChangePasswordSerializer
@@ -11,7 +11,6 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 class RegistrationView(APIView):
     @extend_schema(
         summary="user registration",
-        description="Creates a new user account int the platform.",
         description="Creates a new user account in the platform.",
         request=RegistrationSerializer,
         responses={201: RegistrationSerializer,400: None}
@@ -21,7 +20,7 @@ class RegistrationView(APIView):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response({"message": "Usuario registrado exitosamente."}, status=status.HTTP_201_CREATED)
+            return Response({"message": "User successfully registered."}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -29,10 +28,12 @@ class LoginView(APIView):
 
     @extend_schema(
         summary="User login",
-        description="Authenticates credentiales and returns the authorization Token.",
-        description="Authenticates credentials and returns the authorization Token.",
+        description="Authenticates credentials and returns the JWT access and refresh tokens.",
         request=LoginSerializer,
-        responses={200: {"type": "object", "properties": {"token": {"type": "string"}}}}
+        responses={200: {"type": "object", "properties": {
+            "refresh": {"type": "string"},
+            "access": {"type": "string"}
+        }}}
     )
 
     def post(self, request):
@@ -40,9 +41,12 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data["user"]
-        token, created = Token.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
 
-        return Response({"token": token.key}, status=status.HTTP_200_OK)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }, status=status.HTTP_200_OK)
 @extend_schema_view(
     list=extend_schema(summary="List all users", description="Retrieve a list of all registered users."),
     retrieve=extend_schema(summary="Get user details", description="Retrieve detailed information about a specific user by ID."),
@@ -54,8 +58,8 @@ class LoginView(APIView):
 
 class UserViewSet(viewsets.ModelViewSet):
     """
-    ViewSet para gestionar usuarios.
-    Requiere autenticación para acceder.
+    ViewSet for managing users.
+    Requires authentication to access.
     """
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
@@ -99,14 +103,15 @@ class ChangePasswordView(APIView):
 
     @extend_schema(
         summary="Change password",
-        description="Updates the user password and refreshes the authentication Token.",
+        description="Updates the user password and returns new JWT access and refresh tokens.",
         request=ChangePasswordSerializer,
         responses={
             200: {
                 "type": "object", 
                 "properties": {
                     "message": {"type": "string"}, 
-                    "token": {"type": "string"}
+                    "refresh": {"type": "string"},
+                    "access": {"type": "string"}
                 }
             }
         }
@@ -124,13 +129,13 @@ class ChangePasswordView(APIView):
             user.set_password(serializer.validated_data['new_password'])
             user.save()
 
-            # Actualizar el token
-            Token.objects.filter(user=user).delete()
-            new_token = Token.objects.create(user=user)
+            # Generar nuevos tokens JWT
+            refresh = RefreshToken.for_user(user)
 
             return Response({
-                "message": "Contraseña actualizada exitosamente.",
-                "token": new_token.key
+                "message": "Password successfully updated.",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
