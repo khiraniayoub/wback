@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status, viewsets
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status, viewsets, mixins
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer,ProfileSerializer,ChangePasswordSerializer
-from .models import CustomUser
+from .models import User
 from drf_spectacular.utils import extend_schema, extend_schema_view
 
 
@@ -15,7 +15,6 @@ class RegistrationView(APIView):
         request=RegistrationSerializer,
         responses={201: RegistrationSerializer,400: None}
     )
-    
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
@@ -35,7 +34,6 @@ class LoginView(APIView):
             "access": {"type": "string"}
         }}}
     )
-
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -50,20 +48,24 @@ class LoginView(APIView):
 @extend_schema_view(
     list=extend_schema(summary="List all users", description="Retrieve a list of all registered users."),
     retrieve=extend_schema(summary="Get user details", description="Retrieve detailed information about a specific user by ID."),
-    create=extend_schema(summary="Create user (Admin Only)", description="Manually create a user. Restricted to staff/admins."),
+    #create=extend_schema(summary="Create user (Admin Only)", description="Manually create a user. Restricted to staff/admins."),
     update=extend_schema(summary="Update user", description="Full update of a user's information."),
     partial_update=extend_schema(summary="Patch user", description="Partial update of a user's information."),
     destroy=extend_schema(summary="Delete user", description="Permanently remove a user from the database.")
 )
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.RetrieveModelMixin,
+                  mixins.UpdateModelMixin,
+                  mixins.DestroyModelMixin,
+                  mixins.ListModelMixin,
+                  viewsets.GenericViewSet):
     """
     ViewSet for managing users.
-    Requires authentication to access.
+    Requires Admin privileges to access.
     """
-    queryset = CustomUser.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAdminUser]
 
 
 class ProfileView(APIView):
@@ -74,7 +76,6 @@ class ProfileView(APIView):
         description="Get the profile details of the currently authenticated user.",
         responses={200: ProfileSerializer}
     )
-
     def get(self, request):
         serializer=ProfileSerializer(request.user)
         return Response(serializer.data)
@@ -85,7 +86,6 @@ class ProfileView(APIView):
         request=ProfileSerializer, 
         responses={200: ProfileSerializer}
     )
-
     def put(self,request):
         serializer=ProfileSerializer(request.user, data=request.data,partial=True)
         if serializer.is_valid():
@@ -116,7 +116,6 @@ class ChangePasswordView(APIView):
             }
         }
     )
-
     def post(self, request):
         serializer = ChangePasswordSerializer(
             data=request.data,

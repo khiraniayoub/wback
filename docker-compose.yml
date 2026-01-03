@@ -23,8 +23,10 @@ services:
       - postgres_data_0:/var/lib/postgresql/data/
     environment:
       - POSTGRES_USER=userwback
-      - POSTGRES_PASSWORD=wbackpassword
+      - POSTGRES_PASSWORD=password
       - POSTGRES_DB=wbackdb
+    ports:
+      - "5432:5432"
     networks:
       - wback-network
   redis:
