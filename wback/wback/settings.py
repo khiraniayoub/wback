@@ -63,16 +63,20 @@ SPECTACULAR_SETTINGS = {
     'COMPONENT_SPLIT_REQUEST': True,
     'SECURITY': [{'BearerAuth': []}],
     'APPEND_COMPONENTS': {
-        "securitySchemes": {
-            "BearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-            }
+            "securitySchemes": {
+                 "BearerAuth": {
+                      "type": "apiKey",
+                      "in": "header",
+                      "name": "Authorization",
+                      "description": "Copia el token directamente aquí"
+                    }
         }
-    }
+        }
 }
 
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('',),  # Permite que el token se envíe solo
+}
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
