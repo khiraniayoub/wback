@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status, viewsets, mixins
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .serializers import LoginSerializer, RegistrationSerializer, UserSerializer,ProfileSerializer,ChangePasswordSerializer
 from .models import User
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework.decorators import action
 
 
 class RegistrationView(APIView):
@@ -54,11 +55,7 @@ class LoginView(APIView):
     destroy=extend_schema(summary="Delete user", description="Permanently remove a user from the database.")
 )
 
-class UserViewSet(mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  mixins.DestroyModelMixin,
-                  mixins.ListModelMixin,
-                  viewsets.GenericViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing users.
     Requires Admin privileges to access.
@@ -66,9 +63,20 @@ class UserViewSet(mixins.RetrieveModelMixin,
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser]
+    
+    @action(detail=False, methods=['get','patch'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        serializer=ProfileSerializer(
+            request.user,
+            data=request.data if request.method== 'PATCH' else None,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
-class ProfileView(APIView):
+"""class ProfileView(APIView):
     permission_classes=[IsAuthenticated]
 
     @extend_schema(
@@ -95,7 +103,7 @@ class ProfileView(APIView):
     
     @extend_schema(exclude=True) 
     def patch(self, request):
-        return self.put(request)
+        return self.put(request)"""
     
 
 class ChangePasswordView(APIView):
